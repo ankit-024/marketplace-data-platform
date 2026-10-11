@@ -1,21 +1,31 @@
-name: Live Marketplace Order Stream
+name: Real-Time Marketplace Live Stream
 
 on:
-  # 1. Manual execution with custom order count
+  # 1. Manual execution with real-time streaming controls
   workflow_dispatch:
     inputs:
       batch_size:
-        description: 'Number of orders to stream'
+        description: 'Orders per micro-batch'
         required: true
-        default: '50'
+        default: '15'
+        type: string
+      interval_seconds:
+        description: 'Interval in seconds between micro-batches'
+        required: true
+        default: '20'
+        type: string
+      cycles:
+        description: 'Number of streaming cycles (e.g. 15 cycles of 20s = ~5 min stream)'
+        required: true
+        default: '15'
         type: string
 
-  # 2. Automated background execution (every hour)
+  # 2. Automated execution every 15 minutes (streaming micro-batches)
   schedule:
-    - cron: '0 * * * *'
+    - cron: '*/15 * * * *'
 
 jobs:
-  stream_transactions:
+  realtime_stream:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -31,9 +41,11 @@ jobs:
           pip install --upgrade pip
           pip install psycopg2-binary python-dotenv
 
-      - name: Stream Live Orders to Neon Cloud PostgreSQL
+      - name: Stream Real-Time Transactions to Neon Cloud
         env:
           NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
         run: |
-          BATCH=${{ github.event.inputs.batch_size || '50' }}
-          python -m data_generator.stream_producer $BATCH
+          BATCH=${{ github.event.inputs.batch_size || '15' }}
+          INTERVAL=${{ github.event.inputs.interval_seconds || '25' }}
+          CYCLES=${{ github.event.inputs.cycles || '20' }}
+          python -m data_generator.stream_producer --batch $BATCH --interval $INTERVAL --cycles $CYCLES

@@ -179,27 +179,53 @@ def insert_batch(conn, orders, payments, inv_events):
     conn.commit()
 
 
-def run_stream_batch(batch_size: int = 50):
-    conn = get_connection()
-    try:
-        rng = random.Random()
-        (
-            customers, seller_ids, seller_weights,
-            seller_to_prods, all_prods, current_count
-        ) = fetch_existing_entities(conn)
+def run_stream_session(batch_size: int = 15, interval_seconds: int = 30, cycles: int = 20):
+    """
+    Run continuous micro-batch streaming for a real-time experience.
+    E.g., 15 orders every 30 seconds for 20 cycles = 10 minutes of continuous traffic.
+    """
+    import time
+    rng = random.Random()
+    print("=" * 70)
+    print("  LIVE REAL-TIME STREAM PRODUCER")
+    print(f"  Batch Size: {batch_size} orders | Interval: {interval_seconds}s | Cycles: {cycles}")
+    print("=" * 70)
 
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Generating live batch of {batch_size} orders (Starting from #{current_count + 1})...")
-        orders, payments, inv_events = generate_live_order_batch(
-            batch_size, customers, seller_ids, seller_weights,
-            seller_to_prods, all_prods, current_count, rng
-        )
-        insert_batch(conn, orders, payments, inv_events)
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Successfully streamed {len(orders)} live orders into Neon Cloud!")
-    finally:
-        conn.close()
+    for cycle in range(1, cycles + 1):
+        conn = get_connection()
+        try:
+            (
+                customers, seller_ids, seller_weights,
+                seller_to_prods, all_prods, current_count
+            ) = fetch_existing_entities(conn)
+
+            orders, payments, inv_events = generate_live_order_batch(
+                batch_size, customers, seller_ids, seller_weights,
+                seller_to_prods, all_prods, current_count, rng
+            )
+            insert_batch(conn, orders, payments, inv_events)
+            now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print(f"[{now_str}] [Cycle {cycle}/{cycles}] +{len(orders)} orders streamed! (Total in DB: {current_count + len(orders):,})")
+        finally:
+            conn.close()
+
+        if cycle < cycles:
+            time.sleep(interval_seconds)
+
+    print("\n[SUCCESS] Stream session completed successfully!\n")
 
 
 if __name__ == "__main__":
-    import sys
-    count = int(sys.argv[1]) if len(sys.argv) > 1 else 50
-    run_stream_batch(batch_size=count)
+    import argparse
+    parser = argparse.ArgumentParser(description="Live order stream producer")
+    parser.add_argument("--batch", type=int, default=15, help="Orders per mini-batch")
+    parser.add_argument("--interval", type=int, default=30, help="Interval in seconds between batches")
+    parser.add_argument("--cycles", type=int, default=10, help="Number of mini-batch cycles to run")
+    args = parser.parse_args()
+
+    run_stream_session(
+        batch_size=args.batch,
+        interval_seconds=args.interval,
+        cycles=args.cycles
+    )
+

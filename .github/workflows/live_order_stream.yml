@@ -1,0 +1,39 @@
+name: Live Marketplace Order Stream
+
+on:
+  # 1. Manual execution with custom order count
+  workflow_dispatch:
+    inputs:
+      batch_size:
+        description: 'Number of orders to stream'
+        required: true
+        default: '50'
+        type: string
+
+  # 2. Automated background execution (every hour)
+  schedule:
+    - cron: '0 * * * *'
+
+jobs:
+  stream_transactions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Ingestion Dependencies
+        run: |
+          pip install --upgrade pip
+          pip install psycopg2-binary python-dotenv
+
+      - name: Stream Live Orders to Neon Cloud PostgreSQL
+        env:
+          NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+        run: |
+          BATCH=${{ github.event.inputs.batch_size || '50' }}
+          python -m data_generator.stream_producer $BATCH

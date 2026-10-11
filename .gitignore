@@ -1,0 +1,69 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments & Pipenv
+Pipfile.lock
+.env
+.env.*
+!.env.example
+
+# Jupyter Notebook & Databricks exports
+.ipynb_checkpoints
+*.dbc
+*.dbfs
+
+# Spark / Hadoop / Checkpoints
+spark-warehouse/
+metastore_db/
+derby.log
+checkpoint/
+checkpoints/
+*_checkpoint/
+*_checkpoints/
+
+# Data & Large outputs (Keep code, exclude large local datasets)
+data/raw/
+data/processed/
+data/sample/*.csv
+data/sample/*.parquet
+*.parquet
+*.orc
+*.avro
+!schemas/**/*.avro
+!schemas/**/*.json
+
+# Logs & Monitoring
+*.log
+logs/
+airflow/logs/
+
+# IDE / OS
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db

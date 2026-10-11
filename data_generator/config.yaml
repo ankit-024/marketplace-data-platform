@@ -1,0 +1,35 @@
+# Configuration for Real-Time Marketplace Intelligence Platform Data Generator
+
+generation:
+  seed: 42
+  start_date: "2026-08-01"
+  end_date: "2026-10-10"
+  output_format: "csv" # "csv", "json", "parquet"
+  output_dir: "data/sample"
+
+defaults:
+  customers_count: 5000
+  sellers_count: 500
+  products_count: 2500
+  orders_count: 20000
+
+# Skew parameters (Used in Skew Benchmark Lab)
+skew:
+  enabled: true
+  top_seller_pct: 0.01      # Top 1% of sellers
+  order_share_pct: 0.60     # Receive ~60% of total order volume
+  top_product_pct: 0.02     # Top 2% products drive 50% views
+
+# Realistic Marketplace Dynamics
+lifecycle:
+  payment_failure_rate: 0.07 # 7% payment attempts fail
+  cancellation_rate: 0.04    # 4% orders cancelled
+  return_rate: 0.02          # 2% orders returned
+  inventory_initial_min: 50
+  inventory_initial_max: 500
+
+streaming_events:
+  product_views_count: 50000
+  search_events_count: 25000
+  late_event_pct: 0.05       # 5% events arrive out-of-order / late
+  max_delay_minutes: 180     # Up to 3 hours late

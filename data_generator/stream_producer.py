@@ -20,9 +20,15 @@ load_dotenv()
 
 
 def get_connection():
+    import re
     db_url = os.getenv("DATABASE_URL") or os.getenv("NEON_DATABASE_URL")
     if not db_url:
         raise ValueError("Neither DATABASE_URL nor NEON_DATABASE_URL found in environment!")
+    db_url = db_url.strip()
+    # Strip channel_binding which causes psycopg2 OperationalError on Linux runners
+    db_url = re.sub(r'[?&]channel_binding=[^&]+', '', db_url)
+    if '?' not in db_url and '&' in db_url:
+        db_url = db_url.replace('&', '?', 1)
     return psycopg2.connect(db_url)
 
 

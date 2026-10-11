@@ -20,7 +20,12 @@ if not DATABASE_URL:
 
 
 def get_connection():
-    return psycopg2.connect(DATABASE_URL)
+    import re
+    url = DATABASE_URL.strip()
+    url = re.sub(r'[?&]channel_binding=[^&]+', '', url)
+    if '?' not in url and '&' in url:
+        url = url.replace('&', '?', 1)
+    return psycopg2.connect(url)
 
 
 def initialize_schema(conn, sql_path: Path):
